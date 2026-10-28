@@ -335,8 +335,18 @@ class HireController extends AdminController
         $clash = $model->findOverlap(excludeId: (int) $hire['id'], itemId: $itemId, startsOn: $startsOn, endsOn: $endsOn, turnaroundDays: $turnaroundDays);
         if ($clash === null) return;
 
-        $when = (new \DateTimeImmutable($clash['starts_on']))->format('D j M') . ' to ' . (new \DateTimeImmutable($clash['ends_on']))->format('D j M');
-        throw new \InvalidArgumentException('That clashes with a confirmed hire for ' . $clash['customer_name'] . ' (' . $when . '). Change the days or the item first.');
+        $theirs = (new \DateTimeImmutable($clash['starts_on']))->format('D j M') . ' to ' . (new \DateTimeImmutable($clash['ends_on']))->format('D j M');
+        $name = $clash['customer_name'];
+
+        $overlapsTheirHire = $clash['starts_on'] <= $endsOn && $clash['ends_on'] >= $startsOn;
+        $theirTurnaroundReaches = $clash['ends_on'] < $startsOn;
+        $reason = match (true) {
+            $overlapsTheirHire => "That clashes with the confirmed hire for {$name} ({$theirs}).",
+            $theirTurnaroundReaches => "The item is still in turnaround after the confirmed hire for {$name} ({$theirs}).",
+            default => "The turnaround after this hire would run into the confirmed hire for {$name} ({$theirs}).",
+        };
+
+        throw new \InvalidArgumentException($reason . ' Change the days or the item first.');
     }
 
     // =========================================================================

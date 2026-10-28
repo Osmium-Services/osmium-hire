@@ -224,14 +224,14 @@
     }
 
     function itemDayState(item, iso) {
-        const off = item.unavailable.some(function (range) { return range.from <= iso && iso <= range.to; });
-        if (off) return { cls: 'sched-off' };
+        const off = item.unavailable.find(function (range) { return range.from <= iso && iso <= range.to; });
+        if (off) return { cls: 'sched-off', title: 'Out of service' + (off.reason ? ': ' + off.reason : '') };
 
         for (const hire of Object.values(config.hires || {})) {
             if (String(hire.itemId) !== String(item.id)) continue;
             if (hire.status !== 'requested' && hire.status !== 'confirmed') continue;
             if (hire.start <= iso && iso <= hire.end) return { hire: hire };
-            if (hire.end < iso && iso <= addDays(hire.end, hire.turnaroundDays)) return { cls: 'sched-turn' };
+            if (hire.end < iso && iso <= addDays(hire.end, hire.turnaroundDays)) return { cls: 'sched-turn', title: 'Turnaround after ' + hire.customerName + "'s hire: held for cleaning, inspection or repair" };
         }
 
         return {};
@@ -315,6 +315,8 @@
                 const weekday = new Date(iso + 'T00:00:00').getDay() || 7;
                 const closed = !(config.openDays || {})[weekday];
                 cell.className = 'hp-cell ' + (state.cls || (closed ? 'sched-closed' : ''));
+                const title = state.title || (closed ? 'Closed: no collection or return on this day' : '');
+                if (title) cell.title = title;
                 cell.addEventListener('dblclick', function () { openNewHire(iso, item.id); });
                 table.appendChild(cell);
                 index++;

@@ -1,7 +1,7 @@
 {
     "id": "osmium-hire",
     "name": "Osmium Hire",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Equipment hire for whole days: groups of individual items (a 3 tonne digger, a van), turnaround days after each hire, out-of-service dates, request-and-confirm with collection and return details, a per-item planner, emails and calendar links, with hooks so other services can follow along",
     "category": "business",
     "author": {
