@@ -1,0 +1,161 @@
+<?php
+
+use Osmium\Modules\Admin\Core\ListView;
+
+$adminBasePathPhp = '/' . ($osmium->config->site->adminPath ?? 'admin') . '/';
+
+$listContext = [
+    'adminUrl' => $adminUrl,
+    'isAdmin' => $admin['isAdmin'],
+    'editors' => [],
+    'avatarUrl' => $admin['avatarUrl'] ?? '',
+];
+$settings = $admin['settings'];
+$e = static fn(mixed $value): string => \htmlspecialchars((string) $value);
+?>
+<div class="d-flex justify-content-between align-items-center py-3 mb-4">
+    <h4 class="mb-0">
+        <img src="/assets/services/osmium-hire/logo.png" alt="" width="28" height="28" class="me-2 align-text-bottom">Osmium Hire
+    </h4>
+</div>
+
+<?= ListView::render($admin['lists']['groups'], $admin['groups'], $listContext) ?>
+
+<?= ListView::render($admin['lists']['items'], $admin['items'], $listContext) ?>
+
+<div class="card mb-4">
+    <div class="card-header"><h5 class="mb-0">Hire rules</h5></div>
+    <div class="card-body">
+        <form id="settingsForm">
+            <p class="text-muted mb-2">The first day (collection) and last day (return) must be days you are open, from <a href="<?= $e($adminBasePathPhp) ?>settings/location">Company &gt; Location</a>. The days in between can be closed ones: the item stays out.</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="settingsNotice">Minimum notice (days)</label>
+                    <input type="number" class="form-control" id="settingsNotice" min="0" max="365" value="<?= (int) $settings['minNoticeDays'] ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="settingsAhead">How far ahead (days)</label>
+                    <input type="number" class="form-control" id="settingsAhead" min="1" max="730" value="<?= (int) $settings['maxDaysAhead'] ?>">
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="settingsEmails">Email these addresses when a request comes in (one per line)</label>
+                    <textarea class="form-control" id="settingsEmails" rows="2"><?= $e($settings['notifyEmailsText']) ?></textarea>
+                </div>
+                <div class="col-12 d-flex align-items-center gap-3">
+                    <button type="submit" class="btn btn-outline-primary" id="settingsSaveButton">Save settings</button>
+                    <div id="settingsResult" class="alert d-none mb-0 py-2"></div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="groupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="groupForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="groupModalTitle">Add a group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="groupId">
+                    <div class="mb-3">
+                        <label class="form-label" for="groupName">Name</label>
+                        <input type="text" class="form-control" id="groupName" maxlength="100" placeholder="e.g. 3 tonne digger" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="groupDescription">Description (optional)</label>
+                        <textarea class="form-control" id="groupDescription" rows="2" maxlength="255"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-8 mb-3">
+                            <label class="form-label" for="groupPrice">Price (text)</label>
+                            <input type="text" class="form-control" id="groupPrice" maxlength="50" placeholder="e.g. From £90 a day">
+                        </div>
+                        <div class="col-4 mb-3">
+                            <label class="form-label" for="groupOrder">Order</label>
+                            <input type="number" class="form-control" id="groupOrder" min="0" value="0">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label" for="groupTurnaround">Turnaround after each hire (days)</label>
+                            <input type="number" class="form-control" id="groupTurnaround" min="0" max="60" value="1">
+                            <div class="form-text">Each item is held this many days after it comes back, for cleaning, inspection or repair. Customers never see it.</div>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="groupEnabled" checked>
+                        <label class="form-check-label" for="groupEnabled">Customers can hire <span id="groupChooseName">this</span></label>
+                    </div>
+                    <div class="form-text">The price is only shown: no payment is taken.</div>
+                    <div id="groupResult" class="alert d-none mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="itemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="itemForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="itemModalTitle">Add an item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="itemId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="itemName">Name</label>
+                            <input type="text" class="form-control" id="itemName" maxlength="100" placeholder="e.g. Digger 2" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="itemGroup">Group</label>
+                            <select class="form-select" id="itemGroup">
+                                <?php foreach ($admin['groups'] as $group): ?>
+                                    <option value="<?= (int) $group['id'] ?>"><?= $e($group['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label" for="itemReference">Reference (optional, for you only)</label>
+                            <input type="text" class="form-control" id="itemReference" maxlength="60" placeholder="Serial number, registration or VIN">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="itemOrder">Order</label>
+                            <input type="number" class="form-control" id="itemOrder" min="0" value="0">
+                        </div>
+                    </div>
+                    <h6 class="mt-2">Out of service</h6>
+                    <div class="form-text mb-2">Repairs and servicing. The item cannot be hired on these days. Bookings already made are not moved; they show on the Schedule for you to deal with.</div>
+                    <div id="itemUnavailable" class="mb-2"></div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="itemAddUnavailable"><i class="bx bx-plus me-1"></i>Add dates</button>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="itemEnabled" checked>
+                        <label class="form-check-label" for="itemEnabled">Can be hired</label>
+                    </div>
+                    <div id="itemResult" class="alert d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script nonce="<?= $cspNonce ?? '' ?>">
+    window.OsmiumHireConfig = {
+        basePath: adminBasePath,
+        groups: <?= \json_encode(\array_column($admin['groups'], null, 'id'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        items: <?= \json_encode(\array_column($admin['items'], null, 'id'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+    };
+</script>
+<script src="/assets/admin/js/list-view.js<?= $adminAssetVersion('/assets/admin/js/list-view.js') ?>"></script>
+<script src="/assets/services/osmium-hire/hire.js<?= $adminAssetVersion('/assets/services/osmium-hire/hire.js') ?>"></script>

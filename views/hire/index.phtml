@@ -1,0 +1,159 @@
+<?php
+
+use Osmium\Modules\Admin\Core\ListView;
+
+$listContext = [
+    'adminUrl' => $adminUrl,
+    'isAdmin' => $admin['isAdmin'],
+    'editors' => [],
+    'avatarUrl' => $admin['avatarUrl'] ?? '',
+];
+$settings = $admin['settings'];
+$e = static fn(mixed $value): string => \htmlspecialchars((string) $value);
+$json = static fn(mixed $value): string => (string) \json_encode($value, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+?>
+<div class="d-flex justify-content-between align-items-center py-3 mb-4">
+    <h4 class="mb-0"><i class="bx bx-package me-2 align-text-bottom"></i>Hire</h4>
+</div>
+
+<div class="card mb-4" id="schedule">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h5 class="mb-0" id="scheduleTitle">Schedule</h5>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-primary" id="scheduleNew"><i class="bx bx-plus me-1"></i>New hire</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="scheduleToday">Today</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="schedulePrev" aria-label="Earlier"><i class="bx bx-chevron-left"></i></button>
+            <input type="date" class="form-control form-control-sm" id="scheduleDate" style="width: 10rem;">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="scheduleNext" aria-label="Later"><i class="bx bx-chevron-right"></i></button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-3 mb-3 small text-muted">
+            <span><span class="sched-key sched-requested"></span> Waiting for you</span>
+            <span><span class="sched-key sched-confirmed"></span> Confirmed</span>
+            <span><span class="sched-key sched-turn"></span> Turnaround</span>
+            <span><span class="sched-key sched-off"></span> Out of service</span>
+            <span><span class="sched-key sched-closed"></span> Closed</span>
+        </div>
+        <div id="scheduleGrid" class="sched-scroll"></div>
+    </div>
+</div>
+<style nonce="<?= $cspNonce ?? '' ?>">
+    .sched-scroll { overflow-x: auto; }
+    .hp { display: grid; min-width: 40rem; font-size: .8rem; }
+    .hp-head, .hp-name { padding: .35rem .25rem; border-bottom: 1px solid var(--bs-border-color, #ccc); }
+    .hp-head { text-align: center; font-weight: 600; line-height: 1.15; }
+    .hp-head small { display: block; font-weight: 400; color: var(--bs-secondary-color, #888); }
+    .hp-name { font-weight: 600; white-space: nowrap; padding-right: .75rem; }
+    .hp-name small { display: block; font-weight: 400; color: var(--bs-secondary-color, #888); }
+    .hp-group { grid-column: 1 / -1; padding: .35rem .25rem; font-weight: 600; background: rgba(128,128,128,.12); }
+    .hp-cell { border-left: 1px solid var(--bs-border-color, #ddd); border-bottom: 1px solid var(--bs-border-color, #ddd); min-height: 2rem; }
+    .hp-cell.sched-closed { background: repeating-linear-gradient(135deg, rgba(128,128,128,.28), rgba(128,128,128,.28) 4px, rgba(128,128,128,.12) 4px, rgba(128,128,128,.12) 8px); }
+    .hp-cell.sched-off { background: repeating-linear-gradient(45deg, rgba(220,53,69,.30), rgba(220,53,69,.30) 4px, rgba(220,53,69,.12) 4px, rgba(220,53,69,.12) 8px); }
+    .hp-cell.sched-turn { background: repeating-linear-gradient(0deg, rgba(128,128,128,.35), rgba(128,128,128,.35) 2px, transparent 2px, transparent 5px); }
+    .hp-bar { margin: 3px 2px; padding: .15rem .35rem; border-radius: .35rem; color: #fff; border: 1px solid transparent; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; z-index: 2; line-height: 1.2; }
+    .sched-requested { background: #b8860b; border-color: #e0a800; }
+    .sched-confirmed { background: #1f8f4e; border-color: #28a745; }
+    .sched-key { display: inline-block; width: .9rem; height: .9rem; border-radius: .2rem; vertical-align: -.15rem; margin-right: .25rem; }
+    .sched-key.sched-closed, .sched-key.sched-turn, .sched-key.sched-off { border: 1px solid var(--bs-border-color, #ccc); }
+    .sched-key.sched-closed { background: repeating-linear-gradient(135deg, rgba(128,128,128,.28), rgba(128,128,128,.28) 4px, rgba(128,128,128,.12) 4px, rgba(128,128,128,.12) 8px); }
+    .sched-key.sched-off { background: repeating-linear-gradient(45deg, rgba(220,53,69,.30), rgba(220,53,69,.30) 4px, rgba(220,53,69,.12) 4px, rgba(220,53,69,.12) 8px); }
+    .sched-key.sched-turn { background: repeating-linear-gradient(0deg, rgba(128,128,128,.35), rgba(128,128,128,.35) 2px, transparent 2px, transparent 5px); }
+    .sched-note { padding: 1rem; color: var(--bs-secondary-color, #888); }
+</style>
+
+<?= ListView::render($admin['lists']['active'], $admin['hires'], $listContext) ?>
+<?= ListView::render($admin['lists']['deleted'], $admin['deletedHires'], $listContext) ?>
+
+<div class="modal fade" id="hireModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="hireForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="hireModalTitle">Hire</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="hireId">
+                    <div id="hireNewFields" class="d-none">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label" for="hireName">Customer name</label>
+                                <input type="text" class="form-control" id="hireName" maxlength="100">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="hirePhone">Phone</label>
+                                <input type="tel" class="form-control" id="hirePhone" maxlength="30">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="hireEmail">Email (to send confirmation)</label>
+                                <input type="email" class="form-control" id="hireEmail" maxlength="150">
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mb-1 fw-semibold" id="hireCustomer"></p>
+                    <p class="mb-3 small text-muted" id="hireWho"></p>
+                    <p class="mb-3 text-muted" id="hireTheirNotes"></p>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label" for="hireGroup">What</label>
+                            <select class="form-select" id="hireGroup">
+                                <?php foreach ($admin['groups'] as $group): ?>
+                                    <option value="<?= (int) $group['id'] ?>"><?= $e($group['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label" for="hireItem">Item</label>
+                            <select class="form-select" id="hireItem"></select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label" for="hireStart">First day (collection)</label>
+                            <input type="date" class="form-control" id="hireStart" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label" for="hireEnd">Last day (return)</label>
+                            <input type="date" class="form-control" id="hireEnd" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="hireNotes" id="hireNotesLabel">Your notes (never shown to the customer)</label>
+                        <textarea class="form-control" id="hireNotes" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3 d-none" id="hirePickupBox">
+                        <label class="form-label" for="hirePickup">Collection and return details (goes in the confirmation email)</label>
+                        <textarea class="form-control" id="hirePickup" rows="3" maxlength="2000" placeholder="For example: Collect from the yard after 8am with photo ID. Return by 5pm on the last day."></textarea>
+                    </div>
+                    <div class="mb-3 d-none" id="hireDeclineBox">
+                        <label class="form-label" for="hireDeclineMessage">Message to the customer (optional, goes in the email)</label>
+                        <textarea class="form-control" id="hireDeclineMessage" rows="3" maxlength="1000" placeholder="For example: The 3 tonne digger is free from Monday 16th if that suits you."></textarea>
+                    </div>
+                    <div class="form-text">Confirming, declining or cancelling emails the customer. Changing the days or item of a confirmed hire emails them the update.</div>
+                    <div id="hireResult" class="alert d-none mt-3"></div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-link text-danger px-0 d-none" id="hireDeclineButton" data-decision="decline">Decline request</button>
+                        <button type="button" class="btn btn-link text-danger px-0 d-none" id="hireCancelButton" data-decision="cancel">Cancel hire</button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="hireSaveButton">Save changes</button>
+                        <button type="button" class="btn btn-success d-none" id="hireConfirmButton" data-decision="confirm">Confirm</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script nonce="<?= $cspNonce ?? '' ?>">
+    window.OsmiumHireConfig = {
+        basePath: adminBasePath,
+        hires: <?= $json(\array_column($admin['hires'], null, 'id')) ?>,
+        groups: <?= $json(\array_column($admin['groups'], null, 'id')) ?>,
+        items: <?= $json(\array_column($admin['items'], null, 'id')) ?>,
+        openDays: <?= $json($settings['openDays']) ?>
+    };
+</script>
+<script src="/assets/admin/js/list-view.js<?= $adminAssetVersion('/assets/admin/js/list-view.js') ?>"></script>
+<script src="/assets/services/osmium-hire/hire.js<?= $adminAssetVersion('/assets/services/osmium-hire/hire.js') ?>"></script>
