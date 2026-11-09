@@ -92,6 +92,9 @@ class HireController extends AdminController
         $missingParams = !$action || ($needsId && !$id);
         if ($missingParams) $this->admin->jsonError('Missing parameters');
 
+        $adminOnly = \in_array($action, ['save_settings', 'save_group', 'delete_group', 'save_item', 'delete_item'], true);
+        if ($adminOnly && !$this->isAdmin()) $this->admin->jsonError('Unauthorized');
+
         $message = \trim((string) ($input['message'] ?? ''));
 
         try {
