@@ -1,7 +1,7 @@
 {
     "id": "osmium-hire",
     "name": "Osmium Hire",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "description": "Equipment hire for whole days: groups of individual items (a 3 tonne digger, a van), turnaround days after each hire, out-of-service dates, request-and-confirm with collection and return details, a per-item planner, emails and calendar links, with hooks so other services can follow along",
     "category": "business",
     "author": {
@@ -39,7 +39,9 @@
                     "id": "hire",
                     "label": "Hire",
                     "icon": "bx bx-package",
-                    "placement": "top",
+                    "placement": "group",
+                    "group": "bookings",
+                    "order": 20,
                     "route": "admin/hire",
                     "activePattern": "admin/hire*",
                     "role": null
