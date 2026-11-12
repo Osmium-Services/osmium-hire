@@ -14,6 +14,11 @@ $json = static fn(mixed $value): string => (string) \json_encode($value, JSON_HE
 ?>
 <div class="d-flex justify-content-between align-items-center py-3 mb-4">
     <h4 class="mb-0"><i class="bx bx-package me-2 align-text-bottom"></i>Hire</h4>
+    <?php if ($admin['isAdmin'] ?? false): ?>
+    <a href="<?= $admin['basePath'] ?>settings/hire/" class="btn btn-outline-secondary">
+        <i class="bx bx-cog me-1"></i> Settings
+    </a>
+    <?php endif; ?>
 </div>
 
 <div class="card mb-4" id="schedule">
