@@ -71,7 +71,7 @@ try {
     $groupUnavailable = $group === null || !$group['enabled'];
     if ($groupUnavailable) throw new \InvalidArgumentException('Please choose what you would like to hire');
 
-    $config = HireConfig::get(companyHours: $this->osmium->config->company->openingHours ?? null);
+    $config = HireConfig::get(companyHours: $this->osmium->company()['openingHours'] ?? null);
     $today = new \DateTimeImmutable('today');
     $period = HireRules::period(config: $config, startsOn: $request['start'], endsOn: $request['end'], today: $today);
 

@@ -13,7 +13,7 @@ use Osmium\Core\Library\OsmiumPDO;
  *
  *     $hire = new \Osmium\Services\OsmiumHire\Models\Hires($this->osmium->dataSource);
  *     $groups = $hire->groups();   // id, name, description, price
- *     $rules = $hire->rules($this->osmium->config->company->openingHours ?? null);   // openDays by weekday (1 = Monday), minNoticeDays, maxDaysAhead
+ *     $rules = $hire->rules($this->osmium->company()['openingHours'] ?? null);   // openDays by weekday (1 = Monday), minNoticeDays, maxDaysAhead
  *     $notice = $hire->pullNotice();   // status (sent or failed) and message, shown once
  */
 class Hires
@@ -51,7 +51,7 @@ class Hires
     }
 
     /**
-     * @param mixed $companyHours pass $this->osmium->config->company->openingHours so the open days are the ones in Company > Location
+     * @param mixed $companyHours pass $this->osmium->company()['openingHours'] so the open days are the ones in Company > Location
      * @return array{openDays: array<int, bool>, minNoticeDays: int, maxDaysAhead: int}
      */
     public function rules(mixed $companyHours = null): array

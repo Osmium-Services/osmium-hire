@@ -48,14 +48,14 @@ class HireNotifier
 
     public function declined(array $hire, string $message = ''): void
     {
-        $phone = \trim((string) ($this->osmium->config->company->phone ?? ''));
+        $phone = \trim((string) ($this->osmium->company()['phone'] ?? ''));
         $this->send(to: $hire['customer_email'], mail: HireMail::declined(hire: $hire, siteName: $this->siteName(), message: $message, phone: $phone));
         $this->announce(event: 'hire.declined', hire: $hire);
     }
 
     public function cancelled(array $hire, string $message = ''): void
     {
-        $phone = \trim((string) ($this->osmium->config->company->phone ?? ''));
+        $phone = \trim((string) ($this->osmium->company()['phone'] ?? ''));
         $this->send(to: $hire['customer_email'], mail: HireMail::cancelled(hire: $hire, siteName: $this->siteName(), message: $message, phone: $phone));
         $this->announce(event: 'hire.cancelled', hire: $hire);
     }

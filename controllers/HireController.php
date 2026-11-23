@@ -63,7 +63,7 @@ class HireController extends AdminController
 
     private function loadRules(): void
     {
-        $companyHours = $this->osmium->config->company->openingHours ?? null;
+        $companyHours = $this->osmium->company()['openingHours'] ?? null;
         $this->data['admin']['settings'] = HireConfig::get(companyHours: $companyHours);
         $this->data['admin']['settings']['notifyEmailsText'] = \implode("\n", $this->data['admin']['settings']['notifyEmails']);
         $this->data['admin']['dayNames'] = HireConfig::DAY_NAMES;
@@ -71,7 +71,7 @@ class HireController extends AdminController
 
     private function rules(): array
     {
-        return HireConfig::get(companyHours: $this->osmium->config->company->openingHours ?? null);
+        return HireConfig::get(companyHours: $this->osmium->company()['openingHours'] ?? null);
     }
 
     public function action()
