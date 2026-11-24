@@ -1,6 +1,7 @@
 ---
 title: Set up what can be hired
 tags: hire, settings, groups, items, turnaround, price, out of service, notice
+page: admin/settings/hire
 ---
 
 Open **Settings** on the Hire page.

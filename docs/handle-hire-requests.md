@@ -1,6 +1,7 @@
 ---
 title: Confirm and manage hire requests
 tags: hire, equipment, rental, confirm, collection, return, schedule, customer
+page: admin/hire
 ---
 
 **Hire** manages whole-day equipment hire. Customers send a request, and you confirm it.
