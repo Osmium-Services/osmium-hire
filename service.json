@@ -1,7 +1,7 @@
 {
     "id": "osmium-hire",
     "name": "Osmium Hire",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "description": "Equipment hire for whole days: groups of individual items (a 3 tonne digger, a van), turnaround days after each hire, out-of-service dates, request-and-confirm with collection and return details, a per-item planner, emails and calendar links, with hooks so other services can follow along",
     "category": "business",
     "author": {
@@ -18,8 +18,11 @@
     ],
     "migrations": "migrations/",
     "hooks": {
-        "dashboard.widgets": [
-            "Osmium\\Services\\OsmiumHire\\Models\\HireDashboard::widget"
+        "admin.status_icons": [
+            "Osmium\\Services\\OsmiumHire\\Models\\HireStatusIcon::icons"
+        ],
+        "dashboard.quick_links": [
+            "Osmium\\Services\\OsmiumHire\\Models\\HireDashboardLinks::quickLink"
         ]
     },
     "api": {
@@ -38,7 +41,7 @@
                 {
                     "id": "hire",
                     "label": "Hire",
-                    "icon": "bx bx-package",
+                    "icon": "bx bx-key",
                     "placement": "group",
                     "group": "bookings",
                     "order": 20,
@@ -49,7 +52,7 @@
                 {
                     "id": "settings",
                     "label": "Osmium Hire",
-                    "icon": "bx bx-package",
+                    "icon": "bx bx-key",
                     "route": "admin/settings/hire",
                     "activePattern": "admin/settings/hire",
                     "role": "admin"
